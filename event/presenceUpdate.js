@@ -15,5 +15,6 @@ module.exports = {
                 newPresence.user.send(`Immagina giocare a ${activity.name} nel 2021`);
             }
         });
+        console.log("let's go")
     }
 }
