@@ -1,4 +1,4 @@
-global.bestemmie = new Array(
+exports.bestemmie = new Array(
     'MADONNA ACCHIAPPAFANTASMI',
     'MADONNA ACCIACCATA',
     'MADONNA ADORATA DA TUTTI I DIAVOLI',

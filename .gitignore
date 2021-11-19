@@ -72,6 +72,9 @@ typings/
 # Serverless directories
 .serverless
 
+# botconfig directories
+botconfig/config.json
+
 # FuseBox cache
 .fusebox/
 config.json

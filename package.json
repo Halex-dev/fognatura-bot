@@ -1,15 +1,23 @@
 {
-  "name": "fognatura-bot",
-  "version": "1.0.0",
-  "description": "Bot per fognatura",
-  "main": "main.js",
+  "name": "fogna-bot",
+  "version": "1.0.2",
+  "description": "Bot per la fognatura tuttofare",
+  "main": "mainjs",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "nodemon main.js"
   },
   "author": "Halex_",
-  "license": "ISC",
+  "license": "MIT",
   "dependencies": {
-    "discord.js": "^12.5.3",
-    "fs": "0.0.1-security"
+    "@discordjs/opus": "github:discordjs/opus",
+    "@discordjs/voice": "^0.7.2",
+    "discord.js": "^13.3.1",
+    "distube": "^3.0.1",
+    "enmap": "^5.8.7",
+    "libsodium-wrappers": "^0.7.9",
+    "node-lyrics": "^2.1.3",
+    "node-opus": "^0.3.3",
+    "sodium": "^3.0.2"
   }
 }

@@ -1,96 +1,105 @@
+
+/**
+ *  _____________________________________________________
+ *  |                                                   |
+ *  |                                            
+ *  |                                                   |
+ *  |___________________________________________________|
+ */
+
 const fs = require("fs");
 const Discord = require("discord.js");
+const DisTube = require("distube").default;
+const cfg = require("./botconfig/config.json");
+const filters = require(`./botconfig/filters.json`);
+const Enmap = require("enmap");
 
-//ConfigFile
-const cfg = require("./config.json");
+const client = new Discord.Client({
+  //fetchAllMembers: false,
+  //restTimeOffset: 0,
+  //restWsBridgetimeout: 100,
+  shards: "auto",
+  //shardCount: 5,
+  /*allowedMentions: {
+    parse: [ ],
+    repliedUser: false,
+  },*/
+  //partials: ['MESSAGE', 'CHANNEL', 'REACTION'],
+  intents: [ 
+      Discord.Intents.FLAGS.GUILDS,
+      //Discord.Intents.FLAGS.GUILD_MEMBERS,
+      Discord.Intents.FLAGS.GUILD_MESSAGES,
+      Discord.Intents.FLAGS.GUILD_VOICE_STATES,
+      //Discord.Intents.FLAGS.GUILD_BANS,
+      //Discord.Intents.FLAGS.GUILD_EMOJIS_AND_STICKERS,
+      //Discord.Intents.FLAGS.GUILD_INTEGRATIONS,
+      //Discord.Intents.FLAGS.GUILD_WEBHOOKS,
+      //Discord.Intents.FLAGS.GUILD_INVITES,
+      //Discord.Intents.FLAGS.GUILD_PRESENCES,
+      //Discord.Intents.FLAGS.GUILD_MESSAGE_REACTIONS,
+      //Discord.Intents.FLAGS.GUILD_MESSAGE_TYPING,
+      //Discord.Intents.FLAGS.DIRECT_MESSAGES,
+      //Discord.Intents.FLAGS.DIRECT_MESSAGE_REACTIONS,
+      //Discord.Intents.FLAGS.DIRECT_MESSAGE_TYPING
+  ],
+  presence: {
+    status: 'online',
+    activity: {
+      name: 'La crocifissione di Gesù',
+      type: 'WATCHING'
+    },
+  }
+});
 
-// Extract the required classes from the discord.js module
-const { Client, MessageEmbed, Guild } = require('discord.js');
+//Personal Music player
+client.distube = new DisTube(client, {
+  emitNewSongOnly: false,
+  leaveOnEmpty: true,
+  leaveOnFinish: true,
+  leaveOnStop: true,
+  savePreviousSongs: true,
+  emitAddSongWhenCreatingQueue: false,
+  //emitAddListWhenCreatingQueue: false,
+  searchSongs: 0,
+  youtubeCookie: cfg.youtubeCookie,     //Comment this line if you dont want to use a youtube Cookie 
+  nsfw: true, //Set it to false if u want to disable nsfw songs
+  emptyCooldown: 25,
+  ytdlOptions: {
+    //requestOptions: {
+    //  agent //ONLY USE ONE IF YOU KNOW WHAT YOU DO!
+    //},
+    highWaterMark: 1024 * 1024 * 64,
+    quality: "highestaudio",
+    format: "audioonly",
+    liveBuffer: 60000,
+    dlChunkSize: 1024 * 1024 * 64,
+  },
+  youtubeDL: true,
+  updateYouTubeDL: true,
+  customFilters: filters,
+  plugins: [
+    //new SpotifyPlugin(spotifyoptions),
+    //new SoundCloudPlugin()
+  ]
+})
 
-// Create an instance of a Discord client
-const client = new Client();
+//Define some Global Collections
 client.commands = new Discord.Collection();
-client.event = new Discord.Collection();
+client.cooldowns = new Discord.Collection();
+client.slashCommands = new Discord.Collection();
+client.aliases = new Discord.Collection();
+client.categories = require("fs").readdirSync(`./commands`);
+client.allEmojis = require("./botconfig/emojis.json");
 
+client.setMaxListeners(100); require('events').defaultMaxListeners = 100;
 
-//Prendo gli eventi e i comandi e me li salvo
-const commandFiles = fs.readdirSync(`./commands`).filter(file => file.endsWith('.js'));
-const eventFiles = fs.readdirSync(`./event`).filter(file => file.endsWith('.js'));
+client.settings = new Enmap({ name: "settings",dataDir: "./databases/settings"});
 
-for(const file of commandFiles){
-  const command = require(`./commands/${file}`);
-
-  client.commands.set(command.name, command);
-}
-
-for(const file of eventFiles){
-  const eve = require(`./event/${file}`);
-
-  client.event.set(eve.name, eve);
-}
-
-process.on('unhandledRejection', (reason, promise) => {
-  console.log('Unhandled Rejection at:', reason.stack || reason)
-  return;
-  });
-  
-
-client.on("ready", () => client.event.get("ready").execute(client));
-
-client.on("error", (e) => {
-  console.error(e);
+["events", "commands", cfg.antiCrash ? "antiCrash" : null, "distubeEvent"]
+    .filter(Boolean)
+    .forEach(h => {
+        require(`./handlers/${h}`)(client);
 });
 
-client.on("warn", (e) => {
-console.warn(e);
-});
-
-/*client.on("debug", (e) => {
-console.info(e);
-});*/
-
-
-client.on("message", msg => {
-  if (msg.author.bot) return;
-
-  //Non prendo in considerazione i comandi senza prefisso
-  if (!msg.content.startsWith(cfg.prefix)) return;
-
-  const commandBody = msg.content.slice(cfg.prefix.length).trim(); //Prendo il testo senza il prefix e tolgo spazi alla fine in più
-  const args = commandBody.split(' '); //splitto il comando e tutti gli argomenti (se ci sono)
-  const command = args.shift().toLowerCase(); //prendo solo il comando
-
-  if(!client.commands.has(command)) return;
-
-  try{client.commands.get(command).execute(client, msg, args)
-  }
-  catch (e){
-    console.error(e);
-  }
-  
-});
-
-client.on("userUpdate", (oldUser, newUser) => { console.log("user de merds")
-}
-);
-
-client.on("voiceStateUpdate", (oldUser, newUser) => {
-    try{client.event.get("voiceStateUpdate").execute(oldUser, newUser)
-    }
-    catch (e){
-      console.error(e);
-    }
-  }
-);
-
-client.on('presenceUpdate', (oldPresence, newPresence) => {
-
-  try{client.event.get("presenceUpdate").execute(oldPresence, newPresence)
-  }
-  catch (e){
-    console.error(e);
-  }
- 
-});
 
 client.login(cfg.TOKEN);
